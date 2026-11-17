@@ -1,0 +1,8 @@
+book-protobuf/target/
+python-protobuf/.venv/
+__pycache__/
+.idea/
+*.iml
+Report.docx
+~$*.docx
+shared/

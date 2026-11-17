@@ -1,0 +1,83 @@
+// Shared schema for Homework 5 (Protocol Buffers).
+// The same file is compiled to Java (Maven + protoc) and to Python (protoc --python_out),
+// which shows that the wire format does not depend on the programming language.
+syntax = "proto3";
+
+package library;
+
+option java_multiple_files = true;
+option java_package = "org.ds.library.proto";
+option java_outer_classname = "LibraryProto";
+
+// ---------- Enums ----------
+// In proto3 the first enum value must be 0 and acts as the default value.
+enum Genre {
+  GENRE_UNSPECIFIED = 0;
+  FICTION = 1;
+  SCIENCE = 2;
+  HISTORY = 3;
+  TECHNOLOGY = 4;
+}
+
+enum BookFormat {
+  FORMAT_UNSPECIFIED = 0;
+  HARDCOVER = 1;
+  PAPERBACK = 2;
+  EBOOK = 3;
+}
+
+// ---------- Messages ----------
+message Author {
+  string first_name = 1;
+  string last_name = 2;
+  string nationality = 3;
+}
+
+message Book {
+  string title = 1;
+  Author author = 2;              // a message used as a field type
+  string isbn = 3;
+  int32 publication_year = 4;
+  Genre genre = 5;                // enum field
+  BookFormat format = 6;
+  double price = 7;
+  bool available = 8;
+  repeated string tags = 9;       // list<String> in Java, list in Python
+
+  // Nested message: it lives inside Book, so its full name is library.Book.Review
+  message Review {
+    string reviewer = 1;
+    int32 rating = 2;             // 1..5
+    string comment = 3;
+  }
+  repeated Review reviews = 10;   // list of nested messages
+}
+
+message Library {
+  string name = 1;
+  repeated Book books = 2;
+}
+
+// ---------- gRPC service (optional part) ----------
+message GetBookRequest {
+  string isbn = 1;
+}
+
+message CreateBookResponse {
+  bool created = 1;
+  string message = 2;
+  int32 total_books = 3;
+}
+
+message ListBooksRequest {
+  Genre genre = 1;                // GENRE_UNSPECIFIED means "all genres"
+}
+
+service LibraryService {
+  // Unary RPC: one request, one response
+  rpc GetBook (GetBookRequest) returns (Book);
+  // Unary RPC: client sends a Book, server stores it
+  rpc CreateBook (Book) returns (CreateBookResponse);
+  // Server-streaming RPC: the server sends many books over one HTTP/2 stream
+  rpc ListBooks (ListBooksRequest) returns (stream Book);
+}
